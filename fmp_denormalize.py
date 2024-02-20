@@ -66,7 +66,15 @@ def save_data_to_csv(data, output_file):
     #for testing, save a version of the data with only the first 500 rows
     data.head(500).to_csv(output_file.replace('.csv', '_head500.csv'), index=False)
 
+def prep_limit_orgs(orgs_to_include):
+    # The format of the org IDs coming from FMP is different than in other places
+    # If the limit_orgs file has IDs in the format ```HH######```, we need to convert to ```HH_######```
 
+    # If the first 2 characters are HH and the 3rd character is a digit, replace the 3rd character with an underscore
+    for i in range(len(orgs_to_include)):
+        if orgs_to_include[i][:2] == 'HH' and orgs_to_include[i][2].isdigit():
+            orgs_to_include[i] = orgs_to_include[i][:2] + '_' + orgs_to_include[i][2:]
+    return orgs_to_include
 
 
 
@@ -83,6 +91,7 @@ if __name__ == '__main__':
         parser.add_argument('--input_dir', help='Path to directory containing all 7 FMP csv files. Must specify either input_dir or input_zip, but not both', required=False)
         parser.add_argument('--input_zip', help='Path to zip file containing all 7 FMP csv files. Must specify either input_dir or input_zip, but not both', required=False)
         parser.add_argument('--output_path', help='Output csv or directory for denormalized data', required=True)
+        parser.add_argument('--limit_orgs', help='Limit the orgs to include in the output. Specify a path to a txt or csv file containing a list of org IDs to include', required=False)
         args = parser.parse_args()
         
 
@@ -126,7 +135,13 @@ if __name__ == '__main__':
         #         if 'float' in str(data['folders'][column].dtype):
         #             print(f'row {index} column {column} value {row[column]}')
 
-
+        # If limit_orgs is specified, read in the list of orgs to include
+        if args.limit_orgs is not None:
+            with open(args.limit_orgs, 'r') as f:
+                    orgs_to_include = f.read().splitlines()
+            orgs_to_include = prep_limit_orgs(orgs_to_include)
+        else:
+            orgs_to_include = None
 
 
 
@@ -139,7 +154,12 @@ if __name__ == '__main__':
         # print('main_data', main_data.head(20))
         print(f'Done with folders')
 
-        # Warn of any duplicate columns other, than Organization ID, between main_data and locations_data
+        # Remove any rows where Organization ID is not in orgs_to_include
+        if orgs_to_include is not None:
+            main_data = main_data[main_data['Organization ID'].isin(orgs_to_include)]
+            print(f'Done filtering for orgs_to_include')
+
+        # Warn of any duplicate columns, other than Organization ID, between main_data and locations_data
         for column in main_data.columns:
             if column in data['locations'].columns and column != 'Organization ID':
                 print(f'Warning: column {column} is present in both main_data and locations_data')
@@ -198,7 +218,7 @@ if __name__ == '__main__':
         main_data = join_data(main_data, alternative_name_data, 'Organization ID', suffix='_alternative_name')
         # print('main_data', main_data.head(20))
         print(f'Done with alternative_name')
-        
+
 
         save_data_to_csv(main_data, output_file)
 
