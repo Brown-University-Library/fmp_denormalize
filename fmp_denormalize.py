@@ -81,7 +81,7 @@ def prep_limit_orgs(orgs_to_include):
 if __name__ == '__main__':
     # Parse command line arguments
     try:
-        parser = argparse.ArgumentParser(description='test')#"""
+        parser = argparse.ArgumentParser(description="""
             # Denormalize data from the FileMaker Pro database export into a single CSV file.
             # Input is either a directory containing the 7 CSV files or a zip file containing the 7 CSV files.
             # The expected filenames are: alternative_name.csv, folders.csv, locations.csv, members.csv, related_collections.csv, sources.csv, subjects.csv
