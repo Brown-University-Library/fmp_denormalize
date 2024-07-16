@@ -1,9 +1,7 @@
-import os, sys
+import os
 import zipfile
 import pandas as pd
 import argparse
-import pathlib
-from tqdm import tqdm
 
 def read_csv(input_file):
     data = pd.read_csv(input_file, dtype=str).fillna('')
@@ -64,7 +62,7 @@ def handle_duplicates(df, join_on, unique_only=True):
 def save_data_to_csv(data, output_file):
     data.to_csv(output_file, index=False)
     #for testing, save a version of the data with only the first 500 rows
-    data.head(500).to_csv(output_file.replace('.csv', '_head500.csv'), index=False)
+    # data.head(500).to_csv(output_file.replace('.csv', '_head500.csv'), index=False)
 
 def prep_limit_orgs(orgs_to_include):
     # The format of the org IDs coming from FMP is different than in other places
@@ -127,7 +125,7 @@ if __name__ == '__main__':
             data = read_csvs_from_zip(args.input_zip, expected_filenames)
 
         print('Data read in successfully')
-        print(f'folder data: {data["folders"].head(20)}')
+        # print(f'folder data: {data["folders"].head(20)}')
 
         # #print any rows in folders with float values
         # for index, row in data['folders'].iterrows():
@@ -221,6 +219,9 @@ if __name__ == '__main__':
 
 
         save_data_to_csv(main_data, output_file)
+
+        # Print Done message in green
+        print('\033[92m' + 'Done!' + '\033[0m')
 
     except Exception as e:
         print(f'An error occurred: {str(e)}')
